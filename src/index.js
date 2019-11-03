@@ -1,11 +1,8 @@
-exports.install = function (Vue, options = {}) {
-  const defaultOptions = { messageNoData: '', classNoData: 'ct-nodata' }
-  options = Object.assign({}, defaultOptions, options)
+var Chartist = require('chartist')
 
-  Vue.chartist = require('chartist')
-  Vue.prototype.$chartist = require('chartist')
-
-  Vue.component('Chartist', {
+function chartistFn(options) {
+  return {
+    name: 'chartist',
     props: {
       ratio: {
         type: String,
@@ -13,7 +10,7 @@ exports.install = function (Vue, options = {}) {
       },
       data: {
         type: Object,
-        default () {
+        default() {
           return {
             series: [],
             labels: []
@@ -22,31 +19,31 @@ exports.install = function (Vue, options = {}) {
       },
       options: {
         type: Object,
-        default () {
+        default() {
           return {}
         }
       },
       type: {
         type: String,
         required: true,
-        validator (val) {
+        validator(val) {
           return val === 'Pie' || val === 'Line' || val === 'Bar'
         }
       },
       eventHandlers: {
         type: Array,
-        default () {
+        default() {
           return []
         }
       },
       responsiveOptions: {
         type: Array,
-        default () {
+        default() {
           return []
         }
       }
     },
-    data () {
+    data() {
       return {
         chart: null,
         error: { onError: false, message: '' },
@@ -62,26 +59,26 @@ exports.install = function (Vue, options = {}) {
       type: 'draw',
       eventHandlers: 'resetEventHandlers'
     },
-    mounted () {
+    mounted() {
       this.draw()
     },
     methods: {
-      clear () {
+      clear() {
         this.noData = false
         this.message = ''
         if (this.error.onError) {
           this.error = { onError: false, message: '' }
         }
       },
-      draw () {
+      draw() {
         if (this.haveNoData()) {
           return this.setNoData()
         }
         this.clear()
-        this.chart = new this.$chartist[this.type](this.$refs.chart, this.data, this.options, this.responsiveOptions)
+        this.chart = new Chartist[this.type](this.$refs.chart, this.data, this.options, this.responsiveOptions)
         this.setEventHandlers()
       },
-      haveNoData () {
+      haveNoData() {
         return !this.data ||
           !this.data.series ||
           this.data.series.length < 1 ||
@@ -95,7 +92,7 @@ exports.install = function (Vue, options = {}) {
             })
           )
       },
-      redraw () {
+      redraw() {
         if (this.error.onError) {
           return this.draw()
         } else if (this.haveNoData()) {
@@ -104,7 +101,7 @@ exports.install = function (Vue, options = {}) {
         this.clear()
         this.chart.update(this.data, this.options)
       },
-      resetEventHandlers (eventHandlers, oldEventHandler) {
+      resetEventHandlers(eventHandlers, oldEventHandler) {
         if (!this.chart) {
           return
         }
@@ -115,20 +112,20 @@ exports.install = function (Vue, options = {}) {
           this.chart.on(item.event, item.fn)
         }
       },
-      setEventHandlers () {
+      setEventHandlers() {
         if (this.eventHandlers) {
           for (let item of this.eventHandlers) {
             this.chart.on(item.event, item.fn)
           }
         }
       },
-      setNoData () {
+      setNoData() {
         this.error = { onError: true, message: options.messageNoData }
         this.noData = true
         this.message = this.error.message
       }
     },
-    render (h) {
+    render(h) {
       const children = this.message || this.$slots.default || [];
 
       return h('div', {
@@ -139,5 +136,16 @@ exports.install = function (Vue, options = {}) {
         ]
       }, children)
     }
-  })
+  };
 }
+
+const defaultOptions = { messageNoData: '', classNoData: 'ct-nodata' }
+
+exports.install = function (Vue, options = {}) {
+  options = Object.assign({}, defaultOptions, options)
+
+  Vue.component('chartist', chartistFn(options))
+}
+
+exports.chartist = chartistFn(defaultOptions)
+exports.Chartist = Chartist;
